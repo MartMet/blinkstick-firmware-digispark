@@ -21,3 +21,6 @@
 *.hex
 
 serial.txt
+
+# VSCode
+.vscode/
