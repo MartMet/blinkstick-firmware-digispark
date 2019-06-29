@@ -24,3 +24,10 @@ serial.txt
 
 # VSCode
 .vscode/
+
+# CLion
+CMakeLists.txt
+.idea
+avr-libc-*
+Digistump*
+tiny

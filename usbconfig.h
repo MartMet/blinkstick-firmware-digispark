@@ -91,7 +91,7 @@ section at the end of this file).
  * Since the token is toggled BEFORE sending any data, the first packet is
  * sent with the oposite value of this configuration!
  */
-#define USB_CFG_IMPLEMENT_HALT          1
+#define USB_CFG_IMPLEMENT_HALT          0
 /* Define this to 1 if you also want to implement the ENDPOINT_HALT feature
  * for endpoint 1 (interrupt endpoint). Although you may not need this feature,
  * it is required by the standard. We have made it a config option because it
@@ -105,7 +105,7 @@ section at the end of this file).
  * (e.g. HID), but never want to send any data. This option saves a couple
  * of bytes in flash memory and the transmit buffers in RAM.
  */
-#define USB_CFG_INTR_POLL_INTERVAL      100
+#define USB_CFG_INTR_POLL_INTERVAL      10
 /* If you compile a version with endpoint 1 (interrupt-in), this is the poll
  * interval. The value is in milliseconds and must not be less than 10 ms for
  * low speed devices.
@@ -114,7 +114,7 @@ section at the end of this file).
 /* Define this to 1 if the device has its own power supply. Set it to 0 if the
  * device is powered from the USB bus.
  */
-#define USB_CFG_MAX_BUS_POWER           40
+#define USB_CFG_MAX_BUS_POWER           20
 /* Set this variable to the maximum USB bus power consumption of your device.
  * The value is in milliamperes. [It will be divided by two since USB
  * communicates power requirements in units of 2 mA.]
@@ -124,7 +124,7 @@ section at the end of this file).
  * transfers. Set it to 0 if you don't need it and want to save a couple of
  * bytes.
  */
-#define USB_CFG_IMPLEMENT_FN_READ       1
+#define USB_CFG_IMPLEMENT_FN_READ       0
 /* Set this to 1 if you need to send control replies which are generated
  * "on the fly" when usbFunctionRead() is called. If you only want to send
  * data from a static buffer, set it to 0 and return the data from
@@ -162,7 +162,7 @@ section at the end of this file).
 /* This macro (if defined) is executed when a USB SET_ADDRESS request was
  * received.
  */
-#define USB_COUNT_SOF                   1
+#define USB_COUNT_SOF                   0
 /* define this macro to 1 if you need the global variable "usbSofCount" which
  * counts SOF packets. This feature requires that the hardware interrupt is
  * connected to D- instead of D+.
@@ -206,7 +206,7 @@ section at the end of this file).
  * own Vendor ID, define it here. Otherwise you use one of obdev's free shared
  * VID/PID pairs. Be sure to read USBID-License.txt for rules!
  */
-#define  USB_CFG_DEVICE_ID       0xe5, 0x41 
+#define  USB_CFG_DEVICE_ID       0xe5, 0x41
 /* This is the ID of the product, low byte first. It is interpreted in the
  * scope of the vendor ID. If you have registered your own VID with usb.org
  * or if you have licensed a PID from somebody else, define it here. Otherwise
@@ -216,8 +216,10 @@ section at the end of this file).
 #define USB_CFG_DEVICE_VERSION  0x00, 0x02
 /* Version number of the device: Minor number first, then major number.
  */
-#define USB_CFG_VENDOR_NAME     'A', 'g', 'i', 'l', 'e', ' ', 'I', 'n', 'n', 'o', 'v', 'a', 't', 'i', 'v', 'e', ' ', 'L', 't', 'd' 
-#define USB_CFG_VENDOR_NAME_LEN 20
+#ifndef USB_CFG_VENDOR_NAME
+#define USB_CFG_VENDOR_NAME         'e', 'r', 'i', 'c', 'd', 'r', 'a', 'k', 'e', 'n', '.', 'c', 'o', 'm'
+#define USB_CFG_VENDOR_NAME_LEN     14
+#endif
 /* These two values define the vendor name returned by the USB device. The name
  * must be given as a list of characters under single quotes. The characters
  * are interpreted as Unicode (UTF-16) entities.
@@ -226,15 +228,18 @@ section at the end of this file).
  * obdev's free shared VID/PID pair. See the file USBID-License.txt for
  * details.
  */
-#define USB_CFG_DEVICE_NAME     'B', 'l', 'i', 'n', 'k', 'S', 't', 'i', 'c', 'k'
-#define USB_CFG_DEVICE_NAME_LEN 10
+#ifndef USB_CFG_DEVICE_NAME
+#define USB_CFG_DEVICE_NAME         'B', 'l', 'i', 'n', 'k', 'S', 't', 'i', 'c', 'k'
+#define USB_CFG_DEVICE_NAME_LEN     10
+#endif
 /* Same as above for the device name. If you don't want a device name, undefine
  * the macros. See the file USBID-License.txt before you assign a name if you
  * use a shared VID/PID.
  */
-
-#define USB_CFG_SERIAL_NUMBER   'N', 'I', 'T', 'R', 'A', 'M', '0', '1', '-', '1', '.', '4'   
-#define USB_CFG_SERIAL_NUMBER_LEN   12 
+#ifndef USB_CFG_SERIAL_NUMBER
+#define USB_CFG_SERIAL_NUMBER       'B', 'S', '0', '0', '0', '0', '0', '0', '-', '1', '.', '5'
+#define USB_CFG_SERIAL_NUMBER_LEN   12
+#endif
 
 /* Same as above for the serial number. If you don't want a serial number,
  * undefine the macros.
@@ -256,7 +261,7 @@ section at the end of this file).
  * HID class is 3, no subclass and protocol required (but may be useful!)
  * CDC class is 2, use subclass 2 and protocol 1 for ACM
  */
-#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH    42
+#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH    33
 /* Define this to the length of the HID report descriptor, if you implement
  * an HID device. Otherwise don't define it or define it to 0.
  * If you use this define, you must add a PROGMEM character array named
@@ -327,7 +332,7 @@ section at the end of this file).
 #define USB_CFG_DESCR_PROPS_STRING_0                0
 #define USB_CFG_DESCR_PROPS_STRING_VENDOR           0
 #define USB_CFG_DESCR_PROPS_STRING_PRODUCT          0
-#define USB_CFG_DESCR_PROPS_STRING_SERIAL_NUMBER    (USB_PROP_IS_DYNAMIC | USB_PROP_IS_RAM)
+#define USB_CFG_DESCR_PROPS_STRING_SERIAL_NUMBER    0
 #define USB_CFG_DESCR_PROPS_HID                     0
 #define USB_CFG_DESCR_PROPS_HID_REPORT              0
 #define USB_CFG_DESCR_PROPS_UNKNOWN                 0

@@ -7,9 +7,8 @@
 # License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
 # This Revision: $Id: Makefile 692 2008-11-07 15:07:40Z cs $
 
-#SHELL=C:/Windows/System32/cmd.exe
+SHELL=/bin/sh
 
-#DEVICE  = attiny45
 DEVICE  = attiny85
 F_CPU   = 16500000
 FUSE_L  = 0xe1
@@ -19,8 +18,8 @@ AVRDUDE = avrdude -c usbtiny -P usb -p $(DEVICE) # edit this line for your progr
 CFLAGS  = -Iusbdrv -I. -DDEBUG_LEVEL=0
 OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o light_ws2812.o main.o
 
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU)  $(CFLAGS) -mmcu=$(DEVICE)
-COMPILEPP = avr-g++ -Wall -Os -DF_CPU=$(F_CPU)  $(CFLAGS) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
+COMPILEPP = avr-g++ -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
 
 # symbolic targets:
 help:
@@ -33,7 +32,7 @@ help:
 	@echo "make dumpflash . dump flash"
 	@echo "make defaults .. write default eeprom"
 	@echo "make clean ..... to delete objects and hex file"
-	@echo "make deploy .... program, increment serial, defaults"
+	@echo "make deploy .... program defaults"
 
 hex: main.hex
 
@@ -49,23 +48,22 @@ fuse:
 flash: main.hex
 	$(AVRDUDE) -U flash:w:main.hex:i
 
-dump: 
+dump:
 	$(AVRDUDE) -U eeprom:r:blinkstick-eeprom.hex:i
 
-dumpflash: 
+dumpflash:
 	$(AVRDUDE) -U flash:r:blinkstick-flash.hex:i
 
-defaults: 
+defaults:
 	$(AVRDUDE) -B 3 -U eeprom:w:eeprom.hex:i
 
 # rule for deleting dependent files (those which can be built by Make):
 clean:
-	rm -f main.hex main.lst main.obj main.cof main.list main.map main.eep.hex main.elf 
-	rm -f main.o usbdrv/oddebug.o usbdrv/usbdrv.o usbdrv/usbdrvasm.o main.s usbdrv/oddebug.s usbdrv/usbdrv.s light_ws2812.o
+	rm -f main.hex main.lst main.obj main.cof main.list main.map main.elf
+	rm -f main.o usbdrv/oddebug.o usbdrv/usbdrv.o usbdrv/usbdrvasm.o light_ws2812.o main.s usbdrv/oddebug.s usbdrv/usbdrv.s light_ws2812.s
 
 .cpp.o:
 	$(COMPILEPP) -c $< -o $@
-
 
 # Generic rule for compiling C files:
 .c.o:
@@ -85,15 +83,11 @@ clean:
 
 # file targets:
 
-# Since we don't want to ship the driver multipe times, we copy it into this project:
-usbdrv:
-	cp -r ../../../usbdrv .
-
 main.elf: usbdrv $(OBJECTS)	# usbdrv dependency only needed because we copy it
 	$(COMPILE) -o main.elf $(OBJECTS)
 
 main.hex: main.elf
-	rm -f main.hex main.eep.hex
+	rm -f main.hex
 	avr-objcopy -j .text -j .data -O ihex main.elf main.hex
 	avr-size main.hex
 
@@ -105,7 +99,4 @@ disasm:	main.elf
 cpp:
 	$(COMPILE) -E main.cpp
 
-increment:
-	ruby increment.rb
-
-deploy: program increment defaults
+deploy: program defaults
