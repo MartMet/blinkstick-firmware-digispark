@@ -63,6 +63,7 @@ static volatile bool isBusy = false;
 
 static volatile uint8_t patternCount = 0;
 static uchar patternBuffer[PATTERN_BUFFER_LEN] = {};
+static volatile uint8_t led[3] = {};
 
 /* USB report descriptor */
 const PROGMEM char usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = {
@@ -79,7 +80,7 @@ const PROGMEM char usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] 
         '\xb2', '\x02', '\x01',          //   FEATURE (Data,Var,Abs,Buf)
 
         '\x85', '\x14',                  //   REPORT_ID (20)
-        '\x95', '\xFA', // PATTERN_BUFFER_LEN,      //   REPORT_COUNT (xx)
+        '\x95', (char)PATTERN_BUFFER_LEN,      //   REPORT_COUNT (xx)
         '\x09', '\x00',                  //   USAGE (Undefined)
         '\xb2', '\x02', '\x01',          //   FEATURE (Data,Var,Abs,Buf)
         '\xc0'                           // (MAIN) END_COLLECTION
@@ -105,7 +106,6 @@ void delayMs(unsigned ms) {
 // Quick, gentle green pulse
 void pulse(uint8_t count) {
     for (uint8_t i = 0; i < count; i++) {
-        uint8_t led[3];
         led[0] = 0;
         led[1] = 32;
         led[2] = 0;
@@ -171,15 +171,12 @@ uchar usbFunctionWrite(uchar *data, uchar len)
     if (reportId == 1)
     {
         // Save the last color for report inspection
-        patternBuffer[0] = data[0];     // Report id
-        patternBuffer[1] = 0;           // One pattern
-        patternBuffer[2] = data[1];     // Red
-        patternBuffer[3] = data[2];     // Green
-        patternBuffer[4] = data[3];     // Blue
-        patternBuffer[5] = 0;           // Delay
+        led[R_IDX] = data[1];     // Red
+        led[G_IDX] = data[2];     // Green
+        led[B_IDX] = data[3];     // Blue
 
         // Set the LED immediately
-        ws2812_sendarray_mask(&data[1], 3, _BV(ws2812_pin));
+        ws2812_sendarray_mask(&led[0], 3, _BV(ws2812_pin));
     
         return 1;
     }
@@ -227,9 +224,9 @@ extern "C" usbMsgLen_t usbFunctionSetup(uchar data[8])
             usbMsgPtr = replyBuffer;
             if(reportId == 1){ // Device colors
                 replyBuffer[0] = 1; // report id
-                replyBuffer[1] = patternBuffer[2];
-                replyBuffer[2] = patternBuffer[3];
-                replyBuffer[3] = patternBuffer[4];
+                replyBuffer[1] = led[R_IDX];
+                replyBuffer[2] = led[G_IDX];
+                replyBuffer[3] = led[B_IDX];
                 return 4;
             } else if (reportId == 20) { // Get pattern
                 usbMsgPtr = patternBuffer;
@@ -445,7 +442,6 @@ int main(void)
         if(isBusy) {
             for ( uint8_t currPatternIndex = 0; currPatternIndex < patternCount; currPatternIndex++ ) {
 
-                uint8_t led[3];
                 led[R_IDX] = patternBuffer[ 2 + (4 * currPatternIndex) + 0 ];
                 led[G_IDX] = patternBuffer[ 2 + (4 * currPatternIndex) + 1 ];
                 led[B_IDX] = patternBuffer[ 2 + (4 * currPatternIndex) + 2 ];
@@ -467,7 +463,9 @@ int main(void)
             pulse(1);
 
             // Turn off the LED
-            uint8_t led[3] = {};
+            led[0] = 0;
+            led[1] = 0;
+            led[2] = 0;
             ws2812_sendarray_mask(&led[0], 3, _BV(ws2812_pin));
 
             // Just in case there is a runaway

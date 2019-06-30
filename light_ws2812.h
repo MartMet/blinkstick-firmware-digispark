@@ -11,6 +11,6 @@
 #define ws2812_PORTREG  CONCAT_EXP(PORT, ws2812_port)
 #define ws2812_DDRREG   CONCAT_EXP(DDR,  ws2812_port)
 
-void ws2812_sendarray_mask(uint8_t *array, uint16_t length, uint8_t pinmask);
+void ws2812_sendarray_mask(volatile uint8_t *array, uint16_t length, uint8_t pinmask);
 
 #endif /* LIGHT_WS2812_H_ */

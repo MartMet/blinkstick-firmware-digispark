@@ -18,7 +18,6 @@
 
 # Binary files
 *.elf
-*.hex
 
 serial.txt
 
