@@ -1,3 +1,19 @@
+Why this fork?
+===============
+
+This fork aims to make the Blinkstick.com firmware run on the 
+[Digispark](http://digistump.com/products/1) USB development board
+in combination with **software PWM**.
+
+## Why software PWM? ##
+
+To drive a single RGB-LED a 3 channel PWM is needed. Unfortunately, the 
+Digispark pinout does not offer 3 hardware PWM channels when using 
+V-USB at the same time. The hardware timer1 output resides on 
+Pin PB4 which is already used by USB D- line. Therefore this fork 
+uses 3 freely configurable software PWM channels build on timer1.
+
+
 BlinkStick Firmware
 ===================
 
