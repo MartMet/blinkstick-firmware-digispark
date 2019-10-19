@@ -7,13 +7,22 @@
  * License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
  */
 
+
+
+
 #define LED_PORT_DDR        DDRB
 #define LED_PORT_OUTPUT     PORTB
-#define R_BIT            1
-#define G_BIT            0
-#define B_BIT            4
+#define R_BIT            0
+#define G_BIT            1
+#define B_BIT            2
 
 
+#define F_PWM         100L								// PWM frequency in Hz
+#define PWM_PRESCALER 8                
+#define PWM_STEPS     256    
+#define T_PWM (F_CPU/(PWM_PRESCALER*F_PWM*PWM_STEPS))	// scale
+
+        
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/eeprom.h>
@@ -115,9 +124,9 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 	if (reportId == 1)
 	{
 		//Set color
-		OCR1B = 255 - data[1];
-		OCR0B = 255 - data[2];
-		OCR0A = 255 - data[3];
+		r = data[1];
+		g = data[2];
+		b = data[3];
 
 		return 1;
 	}
@@ -196,16 +205,13 @@ extern "C" usbMsgLen_t usbFunctionSetup(uchar data[8])
 		switch(rq->bRequest)
 		{
 		case CUSTOM_RQ_SET_RED:
-			r = 255 - rq->wValue.bytes[0];
-			OCR0B = r;
+			r = rq->wValue.bytes[0];
 			break;	
 		case CUSTOM_RQ_SET_GREEN:
-			g = 255 - rq->wValue.bytes[0];
-			OCR0A = g;
+			g = rq->wValue.bytes[0];
 			break;	
 		case CUSTOM_RQ_SET_BLUE:
-			b = 255 - rq->wValue.bytes[0];
-			OCR1B = b;
+			b = rq->wValue.bytes[0];
 			break;	
 		}
     }
@@ -216,9 +222,9 @@ extern "C" usbMsgLen_t usbFunctionSetup(uchar data[8])
 			 if(reportId == 1){ //Device colors
 				 
 				replyBuffer[0] = 1; //report id
-				replyBuffer[1] = 255 - OCR1B;
-				replyBuffer[2] = 255 - OCR0B;
-				replyBuffer[3] = 255 - OCR0A;
+				replyBuffer[1] = r;
+				replyBuffer[2] = g;
+				replyBuffer[3] = b;
 
 				return 4;
 				 
@@ -316,22 +322,36 @@ extern "C" void usbEventResetReady(void)
 /* ------------------------------------------------------------------------- */
 void pwmInit (void)
 {
-    /* PWM enable,  */
-    GTCCR |= _BV(PWM1B) | _BV(COM1B1);
-
-    TCCR0A |= _BV(WGM00) | _BV(WGM01) | _BV(COM0A1) | _BV(COM0B1);
-
-
-    /* Start timer 0 and 1 */
-    TCCR1 |= _BV (CS10);
-
-    TCCR0B |=  _BV(CS00);
-
-    /* Set PWM value to 0. */
-    OCR0A = 255;   // PB0
-    OCR0B = 255;   // PB1
-    OCR1B = 255;   // PB4
+	/* enable timer 1 to provide a clock for soft PWM */
+	TCCR1 = 2;              // Prescaler 8
+	TIMSK |= (1<<OCIE1A);   // enable Interrupt 
 } 
+
+ISR(TIMER1_COMPA_vect) {
+	static uint8_t pwm_cnt=0;
+	OCR1A += T_PWM;
+	
+	//set RGB
+	if (r > pwm_cnt) 
+		PORTB &= ~(1 << R_BIT);
+	else 
+		PORTB |= 1 << R_BIT;
+
+	if (g > pwm_cnt)
+		PORTB &= ~(1 << G_BIT);
+	else
+		PORTB |= 1 << G_BIT;
+	
+	if (b > pwm_cnt)
+		PORTB &= ~(1 << B_BIT);
+	else
+		PORTB |= 1 << B_BIT;
+	
+	if (pwm_cnt>=(uint8_t)(PWM_STEPS-1))
+		pwm_cnt=0;
+	else
+		pwm_cnt++;
+}
 
 
 int main(void)
